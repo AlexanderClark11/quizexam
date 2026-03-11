@@ -1010,6 +1010,7 @@ c:3
 let quizQuestions = []
 let current = 0
 let correct = 0
+let startOffset = 0
 let wrongList = JSON.parse(localStorage.getItem("wrongQuestions") || "[]")
 
 
@@ -1051,7 +1052,7 @@ let q = quizQuestions[current]
 
 let html = `
 <div style="margin-bottom:15px;font-size:18px;color:#aaa;">
-Question ${current+1} / ${quizQuestions.length}
+Question ${startOffset + current + 1} / ${startOffset + quizQuestions.length}
 </div>
 
 <div class="question">${q.q}</div>
@@ -1162,14 +1163,15 @@ alert("Enter number of questions")
 return
 }
 
-let startIndex = start - 1
+startOffset = start - 1
 
-quizQuestions = allQuestions.slice(startIndex, startIndex + amount)
+quizQuestions = allQuestions.slice(startOffset, startOffset + amount)
 
 current = 0
 correct = 0
 
 document.getElementById("results").innerHTML = ""
+
 
 showQuestion()
 
