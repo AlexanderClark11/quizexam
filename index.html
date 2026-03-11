@@ -1147,33 +1147,34 @@ showQuestion()
 
 function startCustomQuiz(){
 
-let start = parseInt(document.getElementById("startQuestion").value)
-let amount = parseInt(document.getElementById("questionCount").value)
+let start = parseInt(document.getElementById("startQuestion").value);
+let amount = parseInt(document.getElementById("questionCount").value);
 
 if(isNaN(start) || start < 1){
-start = 1
+alert("Enter a valid starting question");
+return;
 }
 
 if(isNaN(amount) || amount < 1){
-alert("Enter a valid number of questions")
-return
+alert("Enter a valid number of questions");
+return;
 }
 
-start = start - 1
+start = start - 1;
 
 if(start >= allQuestions.length){
-alert("Start question exceeds total questions")
-return
+alert("Start question exceeds total questions");
+return;
 }
 
-quizQuestions = allQuestions.slice(start, start + amount)
+quizQuestions = allQuestions.slice(start, start + amount);
 
-current = 0
-correct = 0
+current = 0;
+correct = 0;
 
-document.getElementById("results").innerHTML = ""
+document.getElementById("results").innerHTML = "";
 
-showQuestion()
+showQuestion();
 
 }
 
@@ -1188,4 +1189,5 @@ startQuiz(150)
 </script>
 
 </body>
+
 </html>
