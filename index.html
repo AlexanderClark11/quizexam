@@ -44,14 +44,6 @@ cursor:pointer;
 background:#2b3242;
 }
 
-.correct{
-background:#1e8f4e;
-}
-
-.wrong{
-background:#c0392b;
-}
-
 #results{
 font-size:26px;
 margin-top:25px;
@@ -63,8 +55,6 @@ margin-top:25px;
 <body>
 
 <h1>Michigan Life Insurance Exam Trainer</h1>
-
-<div>
 
 <div>
 
@@ -85,23 +75,21 @@ margin-right:10px;
 ">
 
 <button onclick="startCustomQuiz()">Start Quiz</button>
-
 <button onclick="startFullExam()">150 Question Exam</button>
-
 <button onclick="studyWrong()">Study Wrong Questions</button>
-
-</div>
 
 </div>
 
 <br>
 
 <div id="quiz"></div>
-
 <div id="results"></div>
 
 <script>
 
+////////////////////////////////////////////////////////
+// PUT YOUR QUESTIONS HERE
+////////////////////////////////////////////////////////
 
 let allQuestions = [
 
@@ -1006,53 +994,66 @@ c:3
 
 ]
 
+////////////////////////////////////////////////////////
+// QUIZ ENGINE
+////////////////////////////////////////////////////////
 
-let quizQuestions = []
-let current = 0
-let correct = 0
-let startOffset = 0
-let wrongList = JSON.parse(localStorage.getItem("wrongQuestions") || "[]")
-
-
+let quizQuestions=[]
+let current=0
+let correct=0
+let startOffset=0
+let currentQuestion=null
+let wrongList=JSON.parse(localStorage.getItem("wrongQuestions")||"[]")
 
 function shuffle(array){
 
-for (let i = array.length - 1; i > 0; i--) {
+for(let i=array.length-1;i>0;i--){
 
-const j = Math.floor(Math.random() * (i + 1));
+let j=Math.floor(Math.random()*(i+1))
 
-[array[i], array[j]] = [array[j], array[i]];
-
-}
-
-return array;
+let temp=array[i]
+array[i]=array[j]
+array[j]=temp
 
 }
 
-
-
-function startQuiz(amount){
-
-document.getElementById("results").innerHTML=""
-
-quizQuestions = allQuestions.slice(0,amount)
-
-current = 0
-correct = 0
-
-showQuestion()
+return array
 
 }
 
+function shuffleAnswers(question){
 
+let answers=[...question.a]
+let correctAnswer=answers[question.c]
+
+for(let i=answers.length-1;i>0;i--){
+
+let j=Math.floor(Math.random()*(i+1))
+
+let temp=answers[i]
+answers[i]=answers[j]
+answers[j]=temp
+
+}
+
+let newCorrectIndex=answers.indexOf(correctAnswer)
+
+return{
+q:question.q,
+a:answers,
+c:newCorrectIndex
+}
+
+}
 
 function showQuestion(){
 
-let q = quizQuestions[current]
+currentQuestion=shuffleAnswers(quizQuestions[current])
+let q=currentQuestion
 
-let html = `
+let html=`
 <div style="margin-bottom:15px;font-size:18px;color:#aaa;">
-Question ${startOffset + current + 1} / ${startOffset + quizQuestions.length}
+Question ${startOffset+current+1}
 </div>
 
 <div class="question">${q.q}</div>
@@ -1060,87 +1061,82 @@ Question ${startOffset + current + 1} / ${startOffset + quizQuestions.length}
 
 q.a.forEach((ans,i)=>{
 
-html += `<div class="answer" onclick="answer(${i})">${ans}</div>`
+html+=`<div class="answer" onclick="answer(${i})">${ans}</div>`
 
 })
 
-document.getElementById("quiz").innerHTML = html
+document.getElementById("quiz").innerHTML=html
 
 }
 
-
-
 function answer(i){
 
-let q = quizQuestions[current]
+let q=currentQuestion
 
 if(i===q.c){
 
 correct++
 
+wrongList=wrongList.filter(item=>item.q!==q.q)
+
 }else{
 
+if(!wrongList.some(item=>item.q===q.q)){
 wrongList.push(q)
-
-localStorage.setItem("wrongQuestions",JSON.stringify(wrongList))
+}
 
 }
+
+localStorage.setItem("wrongQuestions",JSON.stringify(wrongList))
 
 current++
 
 if(current>=quizQuestions.length){
-
 finishQuiz()
-
 }else{
-
 showQuestion()
-
 }
 
 }
-
-
 
 function finishQuiz(){
 
-let total = quizQuestions.length
-let percent = Math.round((correct/total)*100)
-let wrong = total - correct
+let total=quizQuestions.length
+let percent=Math.round((correct/total)*100)
+let wrong=total-correct
 
 document.getElementById("quiz").innerHTML=""
 
 document.getElementById("results").innerHTML=
-
 `
-Score: ${correct} / ${total} <br>
+Score: ${correct} / ${total}<br>
 Wrong: ${wrong}<br>
-Percentage: ${percent}%
+Percentage: ${percent}%<br><br>
 
-<br><br>
-
-<button onclick="startQuiz(${total})">Retry Quiz</button>
-
+<button onclick="restartQuiz()">Retry Quiz</button>
 <button onclick="studyWrong()">Practice Wrong Questions</button>
 `
 
 }
 
+function restartQuiz(){
 
-
-function studyWrong(){
-
-if(wrongList.length === 0){
-
-alert("You have no wrong questions yet.")
-return
+current=0
+correct=0
+showQuestion()
 
 }
 
-quizQuestions = shuffle([...wrongList])
+function startQuiz(amount){
 
-current = 0
-correct = 0
+quizQuestions=allQuestions.slice(0,amount)
+
+current=0
+correct=0
+startOffset=0
+currentQuestion=null
+
+document.getElementById("results").innerHTML=""
 
 showQuestion()
 
@@ -1148,30 +1144,25 @@ showQuestion()
 
 function startCustomQuiz(){
 
-let startInput = document.getElementById("startQuestion")
-let countInput = document.getElementById("questionCount")
+let start=Number(document.getElementById("startQuestion").value)
+let amount=Number(document.getElementById("questionCount").value)
 
-let start = Number(startInput.value)
-let amount = Number(countInput.value)
+if(!start)start=1
 
-if(!start){
-start = 1
-}
-
-if(!amount || amount < 1){
+if(!amount||amount<1){
 alert("Enter number of questions")
 return
 }
 
-startOffset = start - 1
+startOffset=start-1
 
-quizQuestions = allQuestions.slice(startOffset, startOffset + amount)
+quizQuestions=allQuestions.slice(startOffset,startOffset+amount)
 
-current = 0
-correct = 0
+current=0
+correct=0
+currentQuestion=null
 
-document.getElementById("results").innerHTML = ""
-
+document.getElementById("results").innerHTML=""
 
 showQuestion()
 
@@ -1179,15 +1170,43 @@ showQuestion()
 
 function startFullExam(){
 
-wrongList = []   // reset wrong list for new exam
+quizQuestions=shuffle([...allQuestions])
 
-startQuiz(150)
+current=0
+correct=0
+startOffset=0
+currentQuestion=null
+
+wrongList=[]
+localStorage.removeItem("wrongQuestions")
+
+document.getElementById("results").innerHTML=""
+
+showQuestion()
+
+}
+
+function studyWrong(){
+
+wrongList=JSON.parse(localStorage.getItem("wrongQuestions")||"[]")
+
+if(wrongList.length===0){
+alert("You have no wrong questions yet.")
+return
+}
+
+quizQuestions=shuffle([...wrongList])
+
+current=0
+correct=0
+startOffset=0
+currentQuestion=null
+
+showQuestion()
 
 }
 
 </script>
 
 </body>
-
 </html>
-
